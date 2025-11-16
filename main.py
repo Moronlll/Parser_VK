@@ -29,7 +29,7 @@ ascii_art = f"""
 {GREEN}P{RESET}       {BLUE}V{RESET} {BLUE}V{RESET}     {BLUE}K{RESET}  {BLUE}K{RESET}
 {GREEN}P{RESET}        {BLUE}V{RESET}      {BLUE}K{RESET}   {BLUE}K{RESET}
 
-{GREEN}By:Moron319{RESET} 
+{GREEN}By:Moronlll{RESET} 
 {BLUE}version:2.3{RESET} 
 """
 
