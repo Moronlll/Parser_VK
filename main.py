@@ -1,5 +1,7 @@
 #--import libraries/загружаем библиотеки--
 #version: 2.3
+#Creator: Moronlll
+
 
 #PPPP   V   V  K   K
 #P   P  V   V  K  K 
