@@ -1,5 +1,5 @@
 #--import libraries/загружаем библиотеки--
-#version: 2.3
+#version: 2.4
 #Creator: Moronlll
 
 
@@ -32,7 +32,7 @@ ascii_art = f"""
 {GREEN}P{RESET}        {BLUE}V{RESET}      {BLUE}K{RESET}   {BLUE}K{RESET}
 
 {GREEN}By:Moronlll{RESET} 
-{BLUE}version:2.3{RESET} 
+{BLUE}version:2.4{RESET} 
 """
 
 #--set version VK API/назначяем версию VK API--
@@ -52,6 +52,19 @@ while True:
     else:
         print(f"{RED}Invalid choice! Please enter 'en' or 'ru'.{RESET}")
         print(f"{RED}Неверный выбор! Введите 'en' или 'ru'.{RESET}")
+
+#--Mode selection/Выбор режима--
+while True:
+    if lang == "en":
+        mode = input("Choose mode:\n1 - Single-thread\n2 - Multi-thread\n> ").strip()
+    if lang == "ru":
+        mode = input("Выберите режим:\n1 - Одиночка-Загрузка\n2 - Мульти-Загрузка\n> ").strip()
+    if mode in ['1', '2']:
+        break
+    if lang == "en":
+        print(f"{RED}Invalid choice! Please enter '1' or '2'.{RESET}")
+    if lang == "ru":
+       print(f"{RED}Неверный выбор! Введите '1' или '2'.{RESET}")
 
 #--Messages dictionary/Словарь сообщений--
 messages = {
@@ -89,9 +102,52 @@ messages = {
 
 
 
-#--Input/Ввод данных--
-user_id = input(messages[lang]['enter_user_id']).strip()
-access_token = input(messages[lang]['enter_token']).strip()
+#--input result/итог ввода--
+if mode == '1':
+    user_id = input(messages[lang]['enter_user_id']).strip()
+    access_token = input(messages[lang]['enter_token']).strip()
+
+if mode == '2':
+    access_token = input(messages[lang]['enter_token']).strip()
+
+    while True:
+        try:
+            if lang == "en":
+                pages_count = int(input("How many users to download?: ").strip())
+            if lang == "ru":
+                pages_count = int(input("Сколько пользователей скачать?: ").strip())
+            
+            if pages_count > 1:
+                break
+            else:
+                if lang == "en":
+                    print(f"{RED}Please enter a number greater than 1.{RESET}")
+                if lang == "ru":
+                    print(f"{RED}Введите число больше 1.{RESET}")
+
+        except ValueError:
+            if lang == "en":
+                print(f"{RED}Invalid input! Enter a number.{RESET}")
+            if lang == "ru":
+                print(f"{RED}Неверный ввод! Введите число.{RESET}")
+
+    user_ids = []
+
+    for i in range(pages_count):
+        while True:
+            if lang == "en":
+                uid = input(f"Enter VK user ID (example: 4225252) [{i+1}/{pages_count}]: ").strip()
+            if lang == "ru":
+                uid = input(f"Введите ID пользователя VK (пример: 4225252) [{i+1}/{pages_count}]: ").strip()
+            if uid.isdigit():
+                user_ids.append(uid)
+                break
+            else:
+                if lang == "en":
+                    print(f"{RED}Invalid VK ID! Enter a number.{RESET}")
+                if lang == "ru":
+                    print(f"{RED}Неверный ID VK! Введите число.{RESET}")
+
 
 #--Write Logs/Записываем логи--
 def log_error(message):
@@ -223,52 +279,65 @@ def process_photos(photos, folder):
 
 
 #--Main execution/Основной запуск--
+def download_user(user_id):
+    user_name_folder = get_user_name(user_id)
+    base_folder = os.path.join("parser_VK", user_name_folder)
 
-user_name_folder = get_user_name(user_id)
-base_folder = os.path.join("parser_VK", user_name_folder)
+    print(messages[lang]['starting_download'].format(user_name_folder))
 
-print(messages[lang]['starting_download'].format(user_name_folder))
+    total_photos_downloaded = 0
+    total_photos_attempted = 0
 
-total_photos_downloaded = 0
-total_photos_attempted = 0
+    print(messages[lang]['fetching_standard_albums'])
+    albums = get_albums(user_id)
+    for album in albums:
+        album_id = album['id']
+        title = clean_filename(album['title'])
+        print(messages[lang]['album'].format(title))
+        folder_path = os.path.join(base_folder, title)
+        photos = get_photos(user_id, album_id)
+        total_photos_attempted += len(photos)
+        total_photos_downloaded += process_photos(photos, folder_path)
+        time.sleep(0.34)
 
-print(messages[lang]['fetching_standard_albums'])
-albums = get_albums(user_id)
-for album in albums:
-    album_id = album['id']
-    title = clean_filename(album['title'])
-    print(messages[lang]['album'].format(title))
-    folder_path = os.path.join(base_folder, title)
-    photos = get_photos(user_id, album_id)
-    total_photos_attempted += len(photos)
-    total_photos_downloaded += process_photos(photos, folder_path)
-    time.sleep(0.34)
+    print(messages[lang]['fetching_system_albums'])
+    system_albums = {
+        'profile': 'Profile Photos',
+        'wall': 'Wall Photos',
+        'saved': 'Saved Photos'
+    }
 
-print(messages[lang]['fetching_system_albums'])
-system_albums = {
-    'profile': 'Profile Photos',
-    'wall': 'Wall Photos',
-    'saved': 'Saved Photos'
-}
-for album_id, title in system_albums.items():
-    print(messages[lang]['album'].format(title))
-    folder_path = os.path.join(base_folder, clean_filename(title))
-    photos = get_photos(user_id, album_id)
-    total_photos_attempted += len(photos)
-    total_photos_downloaded += process_photos(photos, folder_path)
-    time.sleep(0.34)
+    for album_id, title in system_albums.items():
+        print(messages[lang]['album'].format(title))
+        folder_path = os.path.join(base_folder, clean_filename(title))
+        photos = get_photos(user_id, album_id)
+        total_photos_attempted += len(photos)
+        total_photos_downloaded += process_photos(photos, folder_path)
+        time.sleep(0.34)
 
-print(messages[lang]['fetching_wall_photos'])
-wall_photos = get_wall_photos(user_id)
-wall_folder = os.path.join(base_folder, "Wall_Posts")
-total_photos_attempted += len(wall_photos)
-total_photos_downloaded += process_photos(wall_photos, wall_folder)
+    print(messages[lang]['fetching_wall_photos'])
+    wall_photos = get_wall_photos(user_id)
+    wall_folder = os.path.join(base_folder, "Wall_Posts")
+    total_photos_attempted += len(wall_photos)
+    total_photos_downloaded += process_photos(wall_photos, wall_folder)
 
-if total_photos_attempted == 0:
-    print(messages[lang]['none_downloaded'])
-elif total_photos_downloaded == 0:
-    print(messages[lang]['none_downloaded'])
-elif total_photos_downloaded < total_photos_attempted:
-    print(messages[lang]['some_failed'])
-else:
-    print(messages[lang]['all_done'])
+    if total_photos_attempted == 0:
+        print(messages[lang]['none_downloaded'])
+    elif total_photos_downloaded < total_photos_attempted:
+        print(messages[lang]['some_failed'])
+    else:
+        print(messages[lang]['all_done'])
+
+if mode == '1':
+    download_user(user_id)
+
+elif mode == '2':
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = [executor.submit(download_user, uid) for uid in user_ids]
+        for f in as_completed(futures):
+            f.result()
+
+if lang == "en":
+    input(f"\nPress Enter to exit...")
+if lang == "ru":
+    input(f"\nНажмите Enter для выхода...")
