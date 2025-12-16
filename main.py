@@ -56,9 +56,9 @@ while True:
 #--Mode selection/Выбор режима--
 while True:
     if lang == "en":
-        mode = input("Choose mode:\n1 - Single-thread\n2 - Multi-thread\n> ").strip()
+        mode = input("Choose mode:\n1 - One-user-download\n2 - Multiple-users-download\n> ").strip()
     if lang == "ru":
-        mode = input("Выберите режим:\n1 - Одиночка-Загрузка\n2 - Мульти-Загрузка\n> ").strip()
+        mode = input("Выберите режим:\n1 - Загрузка-одного-пользователя\n2 - Загрузка-нескольких-пользователей\n> ").strip()
     if mode in ['1', '2']:
         break
     if lang == "en":
