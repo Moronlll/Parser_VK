@@ -1,12 +1,17 @@
 # Parser_VK
-Parsing all photos on a person's page vk
+Parsing all photos on a person's page vk 
+
+I made this program purely for myself  
+and it's purely my hobby  
+if anyone wants to use it, feel free to use it 
+
 # Install source code
 To make the code work, install requests and tqdm.
 ```
 pip install requests tqdm
 ```
 
-## Py to exe?
+## Py to exe
 ```
 pip install requests tqdm
 pip install pyinstaller
