@@ -1,5 +1,5 @@
 #--import libraries/загружаем библиотеки--
-#version: 2.4
+#version: 2.45
 #Creator: Moronlll
 
 
@@ -13,6 +13,7 @@ import requests
 import os
 import time
 import re
+import random
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -32,7 +33,7 @@ ascii_art = f"""
 {GREEN}P{RESET}        {BLUE}V{RESET}      {BLUE}K{RESET}   {BLUE}K{RESET}
 
 {GREEN}By:Moronlll{RESET} 
-{BLUE}version:2.4{RESET} 
+{BLUE}version:2.45{RESET} 
 """
 
 #--set version VK API/назначяем версию VK API--
@@ -148,6 +149,15 @@ if mode == '2':
                 if lang == "ru":
                     print(f"{RED}Неверный ID VK! Введите число.{RESET}")
 
+
+#--Create one folder for grouping/Создаем одну папку для группировки--
+if mode == '2':
+    os.makedirs("parser_VK", exist_ok=True)
+    random_folder = os.path.join(
+        "parser_VK",
+        f"session_{random.randint(100000, 999999999)}"
+    )
+    os.makedirs(random_folder, exist_ok=True)
 
 #--Write Logs/Записываем логи--
 def log_error(message):
@@ -279,9 +289,10 @@ def process_photos(photos, folder):
 
 
 #--Main execution/Основной запуск--
-def download_user(user_id):
+def download_user(user_id, base_root="parser_VK"):
     user_name_folder = get_user_name(user_id)
-    base_folder = os.path.join("parser_VK", user_name_folder)
+    base_folder = os.path.join(base_root, user_name_folder)
+
 
     print(messages[lang]['starting_download'].format(user_name_folder))
 
@@ -333,7 +344,11 @@ if mode == '1':
 
 elif mode == '2':
     with ThreadPoolExecutor(max_workers=5) as executor:
-        futures = [executor.submit(download_user, uid) for uid in user_ids]
+        futures = [
+            executor.submit(download_user, uid, random_folder)
+            for uid in user_ids
+        ]
+
         for f in as_completed(futures):
             f.result()
 
@@ -341,3 +356,4 @@ if lang == "en":
     input(f"\nPress Enter to exit...")
 if lang == "ru":
     input(f"\nНажмите Enter для выхода...")
+
