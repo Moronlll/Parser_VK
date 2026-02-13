@@ -1,4 +1,3 @@
-#--import libraries/загружаем библиотеки--
 #version: 2.45
 #Creator: Moronlll
 
@@ -9,6 +8,8 @@
 #P      V   V  K  K 
 #P       VVV   K   K
 
+
+#--import libraries/загружаем библиотеки--
 import requests
 import os
 import time
