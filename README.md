@@ -8,12 +8,18 @@ if anyone wants to use it, feel free to use it
 # Install source code
 To make the code work, install requests and tqdm.
 ```
-pip install requests tqdm
+pip install requests tqdm pillow
 ```
 
-## Py to exe
+## Complie
 ```
-pip install requests tqdm
+pip install requests tqdm pillow
+pip install pyinstaller
+pyinstaller --onefile --name ParserVK --icon=icon.ico main.py
+```
+## for MacOS or Linux just remove icon
+```
+pip install requests tqdm pillow
 pip install pyinstaller
 pyinstaller --onefile --name ParserVK main.py
 ```

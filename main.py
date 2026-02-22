@@ -1,12 +1,13 @@
-#version: 2.45
-#Creator: Moronlll
-
-
 #PPPP   V   V  K   K
 #P   P  V   V  K  K 
 #PPPP   V   V  KKK  
 #P      V   V  K  K 
 #P       VVV   K   K
+
+#Parsing all photos on a person's page vk
+
+#Creator: Moronlll
+#version: 2.5
 
 
 #--import libraries/загружаем библиотеки--
@@ -17,13 +18,15 @@ import re
 import random
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from PIL import Image
+from io import BytesIO
 
 #--Set colors/Установка цветов--
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
 RED = "\033[91m"
-RESET = "\033[0m"
 BLUE = "\033[94m"
+RESET = "\033[0m"
 
 #--ASCII logo/ASCII лого--
 ascii_art = f"""
@@ -33,8 +36,8 @@ ascii_art = f"""
 {GREEN}P{RESET}       {BLUE}V{RESET} {BLUE}V{RESET}     {BLUE}K{RESET}  {BLUE}K{RESET}
 {GREEN}P{RESET}        {BLUE}V{RESET}      {BLUE}K{RESET}   {BLUE}K{RESET}
 
-{GREEN}By:Moronlll{RESET} 
-{BLUE}version:2.45{RESET} 
+{GREEN}By Moronlll{RESET} 
+{BLUE}version:2.5{RESET} 
 """
 
 #--set version VK API/назначяем версию VK API--
@@ -58,9 +61,21 @@ while True:
 #--Mode selection/Выбор режима--
 while True:
     if lang == "en":
+
+        print(f"\n{YELLOW}ATTENTION{RESET}")
+        print(f"{YELLOW}To use the program, you will need a VK access token so we can verify your identity.{RESET}")
+        print(f"{YELLOW}https://id.vk.com/about/business/go/docs/ru/vkid/latest/vk-id/connection/tokens/access-token{RESET}\n")
+
         mode = input("Choose mode:\n1 - One-user-download\n2 - Multiple-users-download\n> ").strip()
+
     if lang == "ru":
+
+        print(f"\n{YELLOW}ВНИМАНИЕ{RESET}")
+        print(f"{YELLOW}Для использования программы вам потребуется vk acces token чтобы мы могли удостоверится в вашей личности.{RESET}")
+        print(f"{YELLOW}https://id.vk.com/about/business/go/docs/ru/vkid/latest/vk-id/connection/tokens/access-token{RESET}\n")
+
         mode = input("Выберите режим:\n1 - Загрузка-одного-пользователя\n2 - Загрузка-нескольких-пользователей\n> ").strip()
+    
     if mode in ['1', '2']:
         break
     if lang == "en":
@@ -102,75 +117,28 @@ messages = {
     }
 }
 
+#--General functions/Главные функции--
 
+#--User id seeker/Поиск user id--
+def resolve_user_id(user_input):
+    user_input = user_input.strip()
 
-#--input result/итог ввода--
-if mode == '1':
-    user_id = input(messages[lang]['enter_user_id']).strip()
-    access_token = input(messages[lang]['enter_token']).strip()
+    user_input = user_input.replace("https://vk.com/", "")
+    user_input = user_input.replace("http://vk.com/", "")
+    user_input = user_input.replace("vk.com/", "")
 
-if mode == '2':
-    access_token = input(messages[lang]['enter_token']).strip()
+    if user_input.startswith("@"):
+        user_input = user_input[1:]
 
-    while True:
-        try:
-            if lang == "en":
-                pages_count = int(input("How many users to download?: ").strip())
-            if lang == "ru":
-                pages_count = int(input("Сколько пользователей скачать?: ").strip())
-            
-            if pages_count > 1:
-                break
-            else:
-                if lang == "en":
-                    print(f"{RED}Please enter a number greater than 1.{RESET}")
-                if lang == "ru":
-                    print(f"{RED}Введите число больше 1.{RESET}")
+    if user_input.isdigit():
+        return user_input
 
-        except ValueError:
-            if lang == "en":
-                print(f"{RED}Invalid input! Enter a number.{RESET}")
-            if lang == "ru":
-                print(f"{RED}Неверный ввод! Введите число.{RESET}")
+    response = vk_api_request('users.get', {'user_ids': user_input})
+    if response and len(response) > 0:
+        return str(response[0]['id'])
 
-    user_ids = []
-
-    for i in range(pages_count):
-        while True:
-            if lang == "en":
-                uid = input(f"Enter VK user ID (example: 4225252) [{i+1}/{pages_count}]: ").strip()
-            if lang == "ru":
-                uid = input(f"Введите ID пользователя VK (пример: 4225252) [{i+1}/{pages_count}]: ").strip()
-            if uid.isdigit():
-                user_ids.append(uid)
-                break
-            else:
-                if lang == "en":
-                    print(f"{RED}Invalid VK ID! Enter a number.{RESET}")
-                if lang == "ru":
-                    print(f"{RED}Неверный ID VK! Введите число.{RESET}")
-
-
-#--Create one folder for grouping/Создаем одну папку для группировки--
-if mode == '2':
-    os.makedirs("parser_VK", exist_ok=True)
-    random_folder = os.path.join(
-        "parser_VK",
-        f"session_{random.randint(100000, 999999999)}"
-    )
-    os.makedirs(random_folder, exist_ok=True)
-
-#--Write Logs/Записываем логи--
-def log_error(message):
-    os.makedirs("logs", exist_ok=True)
-    with open("logs/logs.txt", "a", encoding="utf-8") as f:
-        f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - {message}\n")
-
-#--Helpers/Вспомогательные функции--
-def clean_filename(name):
-    # Clean file/folder names from invalid characters
-    # Очищаем имя файла/папки от недопустимых символов
-    return re.sub(r'[\\/:"*?<>|]+', '_', name)
+    print(messages[lang]['vk_api_error'].format("Invalid username or user not found"))
+    return None
 
 def vk_api_request(method, params):
     # Perform VK API request with error handling
@@ -190,6 +158,71 @@ def vk_api_request(method, params):
         log_error(f"Request exception for method {method}: {e}")
         return None
 
+
+
+#--input result/итог ввода--
+if mode == '1':
+    user_input = input(messages[lang]['enter_user_id']).strip()
+    user_id = resolve_user_id(user_input)
+    if not user_id:
+        exit()
+
+    access_token = input(messages[lang]['enter_token']).strip()
+
+if mode == '2':
+    access_token = input(messages[lang]['enter_token']).strip()
+
+    user_ids = []
+
+    if lang == "en":
+        print("\nEnter VK user IDs one per line.")
+        print("Press Enter without typing anything to finish.\n")
+    else:
+        print("\nВведите ID пользователей VK по одному в строке.")
+        print("Чтобы закончить — нажмите Enter на пустой строке.\n")
+
+    while True:
+        uid = input("VK user ID: ").strip()
+
+        if uid == "":
+            break
+
+        resolved = resolve_user_id(uid)
+        if resolved:
+            user_ids.append(resolved)
+        else:
+            if lang == "en":
+                print(f"{RED}User not found or invalid input!{RESET}")
+            else:
+                print(f"{RED}Пользователь не найден или неверный ввод!{RESET}")
+
+    if not user_ids:
+        print("No users entered. Exiting...")
+        exit()
+
+#--Create one folder for grouping/Создаем одну папку для группировки--
+if mode == '2':
+    os.makedirs("parser_VK", exist_ok=True)
+    random_folder = os.path.join(
+        "parser_VK",
+        f"session_{random.randint(100000, 999999999)}"
+    )
+    os.makedirs(random_folder, exist_ok=True)
+
+
+
+#--Write Logs/Записываем логи--
+def log_error(message):
+    os.makedirs("logs", exist_ok=True)
+    with open("logs/logs.txt", "a", encoding="utf-8") as f:
+        f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - {message}\n")
+
+#--Helpers/Вспомогательные функции--
+def clean_filename(name):
+    # Clean file/folder names from invalid characters
+    # Очищаем имя файла/папки от недопустимых символов
+    return re.sub(r'[\\/:"*?<>|]+', '_', name)
+
 def get_user_name(user_id):
     # Get user's full name from VK
     # Получаем имя и фамилию пользователя из VK
@@ -200,18 +233,34 @@ def get_user_name(user_id):
         return clean_filename(full_name)
     return str(user_id)
 
-def download_photo(url, folder, filename):
+def download_photo(url, folder, filename, retries=3):
     # Download photo and save to folder
     # Скачиваем фото и сохраняем в папку
     os.makedirs(folder, exist_ok=True)
     path = os.path.join(folder, clean_filename(filename))
-    try:
-        img = requests.get(url).content
-        with open(path, 'wb') as f:
-            f.write(img)
-    except Exception as e:
-        print(messages[lang]['download_error'].format(filename, e))
-        log_error(f"Download error for {filename}: {e}")
+    for attempt in range(retries):
+        try:
+            response = requests.get(url, timeout=15)
+            if response.status_code != 200:
+                raise Exception(f"Bad status code: {response.status_code}")
+            content_type = response.headers.get("Content-Type", "")
+            if "image" not in content_type:
+                raise Exception("Response is not an image")
+            if len(response.content) < 5000:
+                raise Exception("File too small, possibly corrupted")
+            img = Image.open(BytesIO(response.content))
+            img.verify()
+
+            with open(path, 'wb') as f:
+                f.write(response.content)
+            return True
+
+        except Exception as e:
+            if attempt == retries - 1:
+                print(messages[lang]['download_error'].format(filename, e))
+                log_error(f"Download error for {filename}: {e}")
+                return False
+            time.sleep(1)
 
 #--Logic/Основная логика--
 def get_albums(user_id):
@@ -266,26 +315,28 @@ def process_photos(photos, folder):
     os.makedirs(folder, exist_ok=True)
     tasks = []
     results = []
-    
     def safe_download(url, folder, filename):
-        try:
-            download_photo(url, folder, filename)
-            return True
-        except:
-            return False
-
+        return download_photo(url, folder, filename)
     with ThreadPoolExecutor(max_workers=5) as executor:
         for i, photo in enumerate(photos):
             sizes = photo.get('sizes', [])
             if not sizes:
                 continue
-            url = sorted(sizes, key=lambda s: s['width'] * s['height'])[-1]['url']
+            largest = sorted(
+                sizes,
+                key=lambda s: s['width'] * s['height']
+            )[-1]
+            url = largest['url']
             filename = f"{i+1}.jpg"
-            tasks.append(executor.submit(safe_download, url, folder, filename))
-        
-        for future in tqdm(as_completed(tasks), total=len(tasks), desc=f"Downloading → {folder}"):
+            tasks.append(
+                executor.submit(safe_download, url, folder, filename)
+            )
+        for future in tqdm(
+            as_completed(tasks),
+            total=len(tasks),
+            desc=f"Downloading → {folder}"
+        ):
             results.append(future.result())
-
     return results.count(True)
 
 
