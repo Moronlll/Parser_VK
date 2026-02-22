@@ -86,7 +86,7 @@ while True:
 #--Messages dictionary/Словарь сообщений--
 messages = {
     'en': {
-        'enter_user_id': "Enter VK user ID (example: 4225252): ",
+        'enter_user_id': "Enter VK username (example: 0000000, @fff, https://vk.com/@fff): ",
         'enter_token': "Enter VK access token: ",
         'starting_download': "\n[+] Starting download for user: {}",
         'fetching_standard_albums': "\n[+] Fetching standard albums...",
@@ -101,7 +101,7 @@ messages = {
         'download_error': "[Download Error] {}: {}"
     },
     'ru': {
-        'enter_user_id': "Введите ID пользователя VK (пример: 4225252): ",
+        'enter_user_id': "Введите имя пользователя VK (пример: 0000000, @fff, https://vk.com/@fff): ",
         'enter_token': "Введите access token VK: ",
         'starting_download': "\n[+] Начинаем загрузку для пользователя: {}",
         'fetching_standard_albums': "\n[+] Получаем стандартные альбомы...",
@@ -175,10 +175,10 @@ if mode == '2':
     user_ids = []
 
     if lang == "en":
-        print("\nEnter VK user IDs one per line.")
+        print("\nEnter VK user IDs or other url one per line.")
         print("Press Enter without typing anything to finish.\n")
     else:
-        print("\nВведите ID пользователей VK по одному в строке.")
+        print("\nВведите ID или прочие ссылки пользователей VK по одному в строке.")
         print("Чтобы закончить — нажмите Enter на пустой строке.\n")
 
     while True:
