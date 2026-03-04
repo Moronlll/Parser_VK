@@ -23,6 +23,13 @@ pip install requests tqdm pillow
 pip install pyinstaller
 pyinstaller --onefile --name ParserVK main.py
 ```
+## If pyinstaller not work
+```
+python -m PyInstaller --onefile --name ParserVK --icon=icon.ico main.py
+```
+```
+python -m PyInstaller --onefile --name ParserVK main.py
+```
 
 # donate me pls  
 BTC:bc1q4uypj3yn6harpyr28xr9v73qs73d45jxesuduh  
